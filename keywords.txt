@@ -70,6 +70,10 @@ extmem_malloc	KEYWORD2
 extmem_free	KEYWORD2
 extmem_calloc	KEYWORD2
 extmem_realloc	KEYWORD2
+sdram_malloc	KEYWORD2
+sdram_free	KEYWORD2
+sdram_calloc	KEYWORD2
+sdram_realloc	KEYWORD2
 strcasecmp	KEYWORD2
 DateTimeFields	LITERAL1
 breakTime	KEYWORD2

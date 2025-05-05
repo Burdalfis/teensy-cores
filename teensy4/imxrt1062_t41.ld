@@ -5,6 +5,7 @@ MEMORY
 	RAM (rwx):   ORIGIN = 0x20200000, LENGTH = 512K
 	FLASH (rwx): ORIGIN = 0x60000000, LENGTH = 7936K
 	ERAM (rwx):  ORIGIN = 0x70000000, LENGTH = 16384K
+  SDRAM (rwx): ORIGIN = 0x80000000, LENGTH = 32768K
 }
 
 ENTRY(ImageVectorTable)
@@ -101,6 +102,11 @@ SECTIONS
 		. = ALIGN(32);
 	} > ERAM
 
+  .bss.extsdram (NOLOAD) : ALIGN(32) {
+		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.externalsdram)))
+		. = ALIGN(32);
+	} > SDRAM
+
 	.text.csf : ALIGN(4) {
 		FILL(0xFF)
 		KEEP(*(.csf))
@@ -122,8 +128,14 @@ SECTIONS
 	_sbss = ADDR(.bss);
 	_ebss = ADDR(.bss) + SIZEOF(.bss);
 
+  _heap_start = ADDR(.bss.dma) + SIZEOF(.bss.dma);
+	_heap_end = ORIGIN(RAM) + LENGTH(RAM);
+
 	_extram_start = ADDR(.bss.extram);
 	_extram_end = ADDR(.bss.extram) + SIZEOF(.bss.extram);
+
+  _extsdram_start = ADDR(.bss.extsdram);
+	_extsdram_end = ADDR(.bss.extsdram) + SIZEOF(.bss.extsdram);
 
 	_itcm_block_count = (SIZEOF(.text.itcm) + 0x7FFF) >> 15;
 	_flexram_bank_config = 0xAAAAAAAA | ((1 << (_itcm_block_count * 2)) - 1);
