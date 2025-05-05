@@ -36,7 +36,7 @@ extern void systick_isr(void);
 extern void pendablesrvreq_isr(void);
 static void configure_cache(void);
 #if defined ARDUINO_TEENSY41 && !defined TEENSY_NO_EXTRAM
-static void configure_external_ram(void);
+// static void configure_external_ram(void);
 #endif
 extern void unused_interrupt_vector(void);
 static void usb_pll_start(void);
@@ -47,13 +47,13 @@ extern float tempmonGetTemp(void);
 extern unsigned long rtc_get(void);
 extern uint32_t set_arm_clock(uint32_t frequency); // clockspeed.c
 extern void __libc_init_array(void);               // C++ standard library
-extern bool sdram_init(void);                      // sdram.c
+
 uint8_t external_psram_size = 0;
+uint8_t external_sdram_size = 0;
 #ifdef ARDUINO_TEENSY41
 struct smalloc_pool extmem_smalloc_pool;
 struct smalloc_pool extsdram_smalloc_pool;
 #endif
-uint8_t external_sdram_size = 0;
 
 extern int main(void);
 FLASHMEM void startup_default_early_hook(void) {}
@@ -114,11 +114,11 @@ __attribute__((section(".startup"), optimize("no-tree-loop-distribute-patterns")
   asm volatile("nop");
 #endif
   // pin 13 - if startup crashes, use this to turn on the LED early for troubleshooting
-  // IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = 5;
-  // IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03 = IOMUXC_PAD_DSE(7);
-  // IOMUXC_GPR_GPR27 = 0xFFFFFFFF;
-  // GPIO7_GDIR |= (1<<3);
-  // GPIO7_DR_SET = (1<<3); // digitalWrite(13, HIGH);
+  /*IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = 5;
+  IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03 = IOMUXC_PAD_DSE(7);
+  IOMUXC_GPR_GPR27 = 0xFFFFFFFF;
+  GPIO7_GDIR |= (1<<3);
+  GPIO7_DR_SET = (1<<3); // digitalWrite(13, HIGH);*/
 
   // Initialize memory
   memory_copy(&_stext, &_stextload, &_etext);
@@ -169,9 +169,9 @@ __attribute__((section(".startup"), optimize("no-tree-loop-distribute-patterns")
   configure_cache();
   configure_systick();
   usb_pll_start();
-  printf("before reset_PFD()\r\n");
+  // printf("before reset_PFD()\r\n");
   reset_PFD(); // TODO: is this really needed?
-  printf("reset_PFD() done.\r\n");
+  // printf("reset_PFD() done.\r\n");
 
 #ifdef F_CPU
   set_arm_clock(F_CPU);
@@ -195,16 +195,21 @@ __attribute__((section(".startup"), optimize("no-tree-loop-distribute-patterns")
   }
   SNVS_HPCR |= SNVS_HPCR_RTC_EN | SNVS_HPCR_HP_TS;
 
-#ifdef ARDUINO_TEENSY41
+  /*#if defined ARDUINO_TEENSY41 && !defined TEENSY_NO_EXTRAM
+    printf("before configure_external_ram()\r\n");
+    configure_external_ram();
+  #endif*/
   if (!sdram_init())
   {
-    // IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = 5;
-    ////IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03 = IOMUXC_PAD_DSE(7);
-    // IOMUXC_GPR_GPR27 = 0xFFFFFFFF;
-    // GPIO7_GDIR |= (1<<3);
-    // GPIO7_DR_SET = (1<<3); // digitalWrite(13, HIGH);
+    IOMUXC_SW_MUX_CTL_PAD_GPIO_B0_03 = 5;
+    IOMUXC_SW_PAD_CTL_PAD_GPIO_B0_03 = IOMUXC_PAD_DSE(7);
+    IOMUXC_GPR_GPR27 = 0xFFFFFFFF;
+    GPIO7_GDIR |= (1 << 3);
+    GPIO7_DR_SET = (1 << 3); // digitalWrite(13, HIGH);
     external_sdram_size = 0;
     memset(&extsdram_smalloc_pool, 0, sizeof(extsdram_smalloc_pool));
+    while (1)
+      ;
   }
   else
   {
@@ -216,7 +221,6 @@ __attribute__((section(".startup"), optimize("no-tree-loop-distribute-patterns")
                     ((uint32_t)&_extsdram_end - (uint32_t)&_extsdram_start),
                 1, NULL);
   }
-#endif
   analog_init();
   pwm_init();
   tempmon_init();
@@ -357,7 +361,7 @@ FLASHMEM static void configure_cache(void)
   SCB_MPU_RBAR = 0x70000000 | REGION(i++); // FlexSPI2
   SCB_MPU_RASR = MEM_CACHE_WT | READWRITE | NOEXEC | SIZE_16M;
 
-  SCB_MPU_RBAR = 0x80000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
+  SCB_MPU_RBAR = 0x90000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
   SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_1G;
   // hardware: https://forum.pjrc.com/index.php?threads/73898/#post-334041
   // software: https://github.com/mjs513/SDRAM_t4

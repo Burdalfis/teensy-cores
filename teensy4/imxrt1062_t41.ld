@@ -5,7 +5,7 @@ MEMORY
 	RAM (rwx):   ORIGIN = 0x20200000, LENGTH = 512K
 	FLASH (rwx): ORIGIN = 0x60000000, LENGTH = 7936K
 	ERAM (rwx):  ORIGIN = 0x70000000, LENGTH = 16384K
-  SDRAM (rwx): ORIGIN = 0x80000000, LENGTH = 32768K
+	SDRAM (rwx): ORIGIN = 0x90000000, LENGTH = 32768K
 }
 
 ENTRY(ImageVectorTable)
@@ -96,13 +96,13 @@ SECTIONS
 		*(.ARM.extab* .gnu.linkonce.armextab.*)
 		. = ALIGN(4);
 	} > RAM  AT> FLASH
-
-	.bss.extram (NOLOAD) : ALIGN(32) {
+	
+	.bss.extram (NOLOAD) : {
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.externalram)))
 		. = ALIGN(32);
 	} > ERAM
 
-  .bss.extsdram (NOLOAD) : ALIGN(32) {
+	.bss.extsdram (NOLOAD) : {
 		*(SORT_BY_ALIGNMENT(SORT_BY_NAME(.externalsdram)))
 		. = ALIGN(32);
 	} > SDRAM
@@ -127,14 +127,11 @@ SECTIONS
 
 	_sbss = ADDR(.bss);
 	_ebss = ADDR(.bss) + SIZEOF(.bss);
-
-  _heap_start = ADDR(.bss.dma) + SIZEOF(.bss.dma);
-	_heap_end = ORIGIN(RAM) + LENGTH(RAM);
-
+	
 	_extram_start = ADDR(.bss.extram);
 	_extram_end = ADDR(.bss.extram) + SIZEOF(.bss.extram);
 
-  _extsdram_start = ADDR(.bss.extsdram);
+	_extsdram_start = ADDR(.bss.extsdram);
 	_extsdram_end = ADDR(.bss.extsdram) + SIZEOF(.bss.extsdram);
 
 	_itcm_block_count = (SIZEOF(.text.itcm) + 0x7FFF) >> 15;

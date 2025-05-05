@@ -51,11 +51,11 @@
 // math is performed and result returned as floating point, to allow for fine grain
 // mapping.
 template <class T, class A, class B, class C, class D>
-long map(T _x, A _in_min, B _in_max, C _out_min, D _out_max, typename std::enable_if<std::is_integral<T>::value>::type * = 0)
+long map(T _x, A _in_min, B _in_max, C _out_min, D _out_max, typename std::enable_if<std::is_integral<T>::value >::type* = 0)
 {
-  // when the input number is an integer type, do all math as 32 bit signed long
-  long x = _x, in_min = _in_min, in_max = _in_max, out_min = _out_min, out_max = _out_max;
-  // Arduino's traditional algorithm
+	// when the input number is an integer type, do all math as 32 bit signed long
+	long x = _x, in_min = _in_min, in_max = _in_max, out_min = _out_min, out_max = _out_max;
+	// Arduino's traditional algorithm
 #if 0
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 #endif
@@ -67,40 +67,31 @@ long map(T _x, A _in_min, B _in_max, C _out_min, D _out_max, typename std::enabl
 		return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 	}
 #endif
-  // first compute the ranges and check if input doesn't matter
-  long in_range = in_max - in_min;
-  long out_range = out_max - out_min;
-  if (in_range == 0)
-    return out_min + out_range / 2;
-  // compute the numerator
-  long num = (x - in_min) * out_range;
-  // before dividing, add extra for proper round off (towards zero)
-  if (out_range >= 0)
-  {
-    num += in_range / 2;
-  }
-  else
-  {
-    num -= in_range / 2;
-  }
-  // divide by input range and add output offset to complete map() compute
-  long result = num / in_range + out_min;
-  // fix "a strange behaviour with negative numbers" (see ArduinoCore-API issue #51)
-  //   this step can be deleted if you don't care about non-linear output
-  //   behavior extrapolating slightly beyond the mapped input & output range
-  if (out_range >= 0)
-  {
-    if (in_range * num < 0)
-      return result - 1;
-  }
-  else
-  {
-    if (in_range * num >= 0)
-      return result + 1;
-  }
-  return result;
-  // more conversation:
-  // https://forum.pjrc.com/threads/44503-map()-function-improvements
+	// first compute the ranges and check if input doesn't matter
+	long in_range = in_max - in_min;
+	long out_range = out_max - out_min;
+	if (in_range == 0) return out_min + out_range / 2;
+	// compute the numerator
+	long num = (x - in_min) * out_range;
+	// before dividing, add extra for proper round off (towards zero)
+	if (out_range >= 0) {
+		num += in_range / 2;
+	} else {
+		num -= in_range / 2;
+	}
+	// divide by input range and add output offset to complete map() compute
+	long result = num / in_range + out_min;
+	// fix "a strange behaviour with negative numbers" (see ArduinoCore-API issue #51)
+	//   this step can be deleted if you don't care about non-linear output
+	//   behavior extrapolating slightly beyond the mapped input & output range
+	if (out_range >= 0) {
+		if (in_range * num < 0) return result - 1;
+	} else {
+		if (in_range * num >= 0) return result + 1;
+	}
+	return result;
+	// more conversation:
+	// https://forum.pjrc.com/threads/44503-map()-function-improvements
 }
 // map() transforms input "x" from one numerical range to another.  For example, if
 // you have analogInput() from 0 to 1023 and you want 5 to 25, use
@@ -109,39 +100,38 @@ long map(T _x, A _in_min, B _in_max, C _out_min, D _out_max, typename std::enabl
 // math is performed and result returned as floating point, to allow for fine grain
 // mapping.
 template <class T, class A, class B, class C, class D>
-T map(T x, A in_min, B in_max, C out_min, D out_max, typename std::enable_if<std::is_floating_point<T>::value>::type * = 0)
+T map(T x, A in_min, B in_max, C out_min, D out_max, typename std::enable_if<std::is_floating_point<T>::value >::type* = 0)
 {
-  // when the input is a float or double, do all math using the input's type
-  return (x - (T)in_min) * ((T)out_max - (T)out_min) / ((T)in_max - (T)in_min) + (T)out_min;
+	// when the input is a float or double, do all math using the input's type
+	return (x - (T)in_min) * ((T)out_max - (T)out_min) / ((T)in_max - (T)in_min) + (T)out_min;
 }
-// #include <algorithm> // this isn't really needed, is it?  (slows down compiling)
+//#include <algorithm> // this isn't really needed, is it?  (slows down compiling)
 #include <utility>
 // https://forum.pjrc.com/threads/44596-Teensyduino-1-37-Beta-2-(Arduino-1-8-3-support)?p=145150&viewfull=1#post145150
 
 // Returns the minimum of 2 input numbers.
-template <class A, class B>
-constexpr auto min(A &&a, B &&b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b))
-{
+template<class A, class B>
+constexpr auto min(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
   return a < b ? std::forward<A>(a) : std::forward<B>(b);
 }
 // Returns the maximum of 2 input numbers.
-template <class A, class B>
-constexpr auto max(A &&a, B &&b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b))
-{
+template<class A, class B>
+constexpr auto max(A&& a, B&& b) -> decltype(a < b ? std::forward<A>(a) : std::forward<B>(b)) {
   return a >= b ? std::forward<A>(a) : std::forward<B>(b);
 }
 #else // not C++
-#define min(a, b) ({   \
-  typeof(a) _a = (a);  \
-  typeof(b) _b = (b);  \
+#define min(a, b) ({ \
+  typeof(a) _a = (a); \
+  typeof(b) _b = (b); \
   (_a < _b) ? _a : _b; \
 })
-#define max(a, b) ({   \
-  typeof(a) _a = (a);  \
-  typeof(b) _b = (b);  \
+#define max(a, b) ({ \
+  typeof(a) _a = (a); \
+  typeof(b) _b = (b); \
   (_a > _b) ? _a : _b; \
 })
 #endif
+
 
 #ifdef PI
 #undef PI
@@ -159,7 +149,7 @@ constexpr auto max(A &&a, B &&b) -> decltype(a < b ? std::forward<A>(a) : std::f
 #define M_SQRT2 1.4142135623730950488016887
 #endif
 
-#define SERIAL 0
+#define SERIAL  0
 #define DISPLAY 1
 
 // undefine stdlib's abs if encountered
@@ -177,32 +167,31 @@ constexpr auto max(A &&a, B &&b) -> decltype(a < b ? std::forward<A>(a) : std::f
   (_x > 0) ? _x : -_x; \
 })
 */
-#define constrain(amt, low, high) ({                      \
-  typeof(amt) _amt = (amt);                               \
-  typeof(low) _low = (low);                               \
-  typeof(high) _high = (high);                            \
+#define constrain(amt, low, high) ({ \
+  typeof(amt) _amt = (amt); \
+  typeof(low) _low = (low); \
+  typeof(high) _high = (high); \
   (_amt < _low) ? _low : ((_amt > _high) ? _high : _amt); \
 })
-// #define round(x) ((long) __builtin_round(x))
+//#define round(x) ((long) __builtin_round(x))
 
-#define radians(deg) ((deg) * DEG_TO_RAD)
-#define degrees(rad) ((rad) * RAD_TO_DEG)
-#define sq(x) ({      \
+#define radians(deg) ((deg)*DEG_TO_RAD)
+#define degrees(rad) ((rad)*RAD_TO_DEG)
+#define sq(x) ({ \
   typeof(x) _x = (x); \
-  _x *_x;             \
+  _x * _x; \
 })
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C"{
 #endif
 
-  extern double exp10(double x);
-  extern float exp10f(float x);
-  extern long double exp10l(long double x);
-  extern double pow10(double x);
-  extern float pow10f(float x);
-  extern long double pow10l(long double x);
+extern double exp10(double x);
+extern float exp10f(float x);
+extern long double exp10l(long double x);
+extern double pow10(double x);
+extern float pow10f(float x);
+extern long double pow10l(long double x);
 
 #define stricmp(a, b) strcasecmp(a, b)
 
@@ -211,9 +200,9 @@ extern "C"
 #define interrupts() __enable_irq()
 #define noInterrupts() __disable_irq()
 
-#define clockCyclesPerMicrosecond() (F_CPU_ACTUAL / 1000000L)
-#define clockCyclesToMicroseconds(a) ((a) / clockCyclesPerMicrosecond())
-#define microsecondsToClockCycles(a) ((a) * clockCyclesPerMicrosecond())
+#define clockCyclesPerMicrosecond() ( F_CPU_ACTUAL / 1000000L )
+#define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
+#define microsecondsToClockCycles(a) ( (a) * clockCyclesPerMicrosecond() )
 
 #define lowByte(w) ((uint8_t)((w) & 0xFF))
 #define highByte(w) ((uint8_t)((w) >> 8))
@@ -223,27 +212,27 @@ extern "C"
 #define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
 #define bitWrite(value, bit, bitvalue) ((bitvalue) ? bitSet((value), (bit)) : bitClear((value), (bit)))
 
-  typedef unsigned int word;
+typedef unsigned int word;
 
 #define bit(b) (1UL << (b))
 
-  typedef uint8_t byte;
+typedef uint8_t byte;
 
-  uint32_t pulseIn(uint8_t pin, uint8_t state, uint32_t timeout);
-  void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, byte val);
+uint32_t pulseIn(uint8_t pin, uint8_t state, uint32_t timeout);
+void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, byte val);
 
-  void setup(void);
-  void loop(void);
+void setup(void);
+void loop(void);
 
-  void *extmem_malloc(size_t size);
-  void extmem_free(void *ptr);
-  void *extmem_calloc(size_t nmemb, size_t size);
-  void *extmem_realloc(void *ptr, size_t size);
+void *extmem_malloc(size_t size);
+void extmem_free(void *ptr);
+void *extmem_calloc(size_t nmemb, size_t size);
+void *extmem_realloc(void *ptr, size_t size);
 
-  void *sdram_malloc(size_t size);
-  void sdram_free(void *ptr);
-  void *sdram_calloc(size_t nmemb, size_t size);
-  void *sdram_realloc(void *ptr, size_t size);
+void *sdram_malloc(size_t size);
+void sdram_free(void *ptr);
+void *sdram_calloc(size_t nmemb, size_t size);
+void *sdram_realloc(void *ptr, size_t size);
 
 #ifdef __cplusplus
 } // extern "C"
