@@ -4,6 +4,9 @@
 #include "avr/pgmspace.h"
 #include "smalloc.h"
 #include <string.h>
+#include <stdbool.h>
+
+extern bool sdram_init(void);
 
 #include "debug/printf.h"
 
@@ -214,8 +217,12 @@ __attribute__((section(".startup"), optimize("no-tree-loop-distribute-patterns")
   else
   {
     external_sdram_size = 32;
-    // TODO: zero uninitialized EXTMEM variables
-    // TODO: copy from flash to initialize EXTMEM variables
+    /* .bss.extsdram is NOLOAD: clear reserved static SDRAM after init,
+       before constructors or the allocator can use it. The existing
+       memory_clear() writes at least one word, so skip an empty section. */
+    if ((uintptr_t)&_extsdram_start < (uintptr_t)&_extsdram_end)
+      memory_clear((uint32_t *)&_extsdram_start, (uint32_t *)&_extsdram_end);
+    /* Initialized SDRAM data needs a separate linker load/copy section. */
     sm_set_pool(&extsdram_smalloc_pool, &_extsdram_end,
                 external_sdram_size * 0x100000 -
                     ((uint32_t)&_extsdram_end - (uint32_t)&_extsdram_start),
@@ -362,7 +369,7 @@ FLASHMEM static void configure_cache(void)
   SCB_MPU_RASR = MEM_CACHE_WT | READWRITE | NOEXEC | SIZE_16M;
 
   SCB_MPU_RBAR = 0x90000000 | REGION(i++); // SEMC: SDRAM, NAND, SRAM, etc
-  SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_1G;
+  SCB_MPU_RASR = MEM_CACHE_WBWA | READWRITE | NOEXEC | SIZE_32M;
   // hardware: https://forum.pjrc.com/index.php?threads/73898/#post-334041
   // software: https://github.com/mjs513/SDRAM_t4
 
