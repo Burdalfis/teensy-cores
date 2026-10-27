@@ -22,7 +22,6 @@
  */
 //#include <asm.h>
 //#include <arch/arm/cores.h>
-#if defined (__OPTIMIZE_SIZE__)
 #if defined (__ARM_ARCH_7M__) || defined (__ARM_ARCH_7EM__)
 .global	memset
 .text
@@ -44,7 +43,7 @@
     // short memsets aren't worth optimizing and make sure we have
     // enough headroom to try to do dwordwise move optimization
     cmp     r2, #16
-    blt     .L_bytewise
+    blo     .L_bytewise
 
     // see how many bytes we need to move to align to dword boundaries
     and     r3, r0, #7
@@ -88,6 +87,6 @@
 .L_done:
     // restore the base pointer as return value
     pop     { r0, pc }
+    .size   memset, .-memset
 
-#endif
 #endif

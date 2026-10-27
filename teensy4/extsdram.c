@@ -5,7 +5,7 @@
 #include "smalloc.h"
 #include "wiring.h"
 
-#if defined(ARDUINO_TEENSY_MICROMOD)
+#if defined(ARDUINO_TEENSY41) || defined(ARDUINO_TEENSY_MICROMOD)
 // Teensy Micromod external RAM address range is 0x90000000 to 0x9FFFFFFF
 #define HAS_SDRAM
 #define IS_SDRAM(addr) (((uint32_t)addr >> 28) == 9)
